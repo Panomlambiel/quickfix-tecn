@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny Catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { 
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() == 8 && id.matches('^[A-Z0-9]+$');
+    }
+
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Validation Blueprint for Repair Order
+    function isValidRepairOrder(data) {
+      return data.keys().hasAll(['id', 'customerName', 'email', 'deviceType', 'issueCategory', 'remoteConsent', 'issueDescription', 'status', 'createdAt'])
+        && data.keys().size() == 9
+        && isValidId(data.id)
+        && data.customerName is string && data.customerName.size() >= 2 && data.customerName.size() <= 100
+        && data.email is string && data.email.size() >= 5 && data.email.size() <= 100 && data.email.matches('^.+@.+$')
+        && data.deviceType is string && data.deviceType.size() > 0 && data.deviceType.size() <= 50
+        && data.issueCategory is string && data.issueCategory in ['Slow Performance', 'Wi-Fi/Internet', 'Other']
+        && data.remoteConsent is bool
+        && data.issueDescription is string && data.issueDescription.size() > 0 && data.issueDescription.size() <= 2000
+        && data.status in ['pending', 'diagnosing', 'repairing', 'completed']
+        && data.createdAt is timestamp;
+    }
+
+    match /repair_orders/{orderId} {
+      // Hardening path variable
+      allow get: if isValidId(orderId);
+      
+      // List is disabled to prevent scraping
+      allow list: if false;
+
+      allow create: if (
+        // For this app, creation is public but must follow schema
+        isValidRepairOrder(incoming()) &&
+        incoming().id == orderId &&
+        incoming().status == 'pending' &&
+        incoming().createdAt == request.time
+      );
+
+      allow update: if (
+        isValidRepairOrder(incoming()) && (
+          isAdmin() || (
+            // Only allow status updates or certain fields if defined
+            // For now, let's assume only admins update or we use server proxy
+            // If server proxy (Admin SDK), these rules are bypassed.
+            // If server proxy (Client SDK), it must match this.
+            incoming().id == existing().id &&
+            incoming().createdAt == existing().createdAt &&
+            existing().status != 'completed' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'issueDescription'])
+          )
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Immersive UI Palette */
+  --color-tech-blue: #2563EB;
+  --color-dark-slate: #0F172A;
+  --color-slate-card: #1E293B;
+  --color-emergency-orange: #EA580C;
+  --color-glow-orange: rgba(234, 88, 12, 0.3);
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+
+  /* Animations */
+  @keyframes active-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 4px var(--color-emergency-orange)); }
+    50% { transform: scale(1.1); opacity: 0.8; filter: drop-shadow(0 0 12px var(--color-emergency-orange)); }
+  }
+  --animate-active-pulse: active-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@layer base {
+  body {
+    @apply bg-dark-slate text-text-primary font-sans selection:bg-tech-blue/30 antialiased;
+  }
+}
+
+@layer components {
+  .hardware-card {
+    @apply bg-slate-card border border-white/10 rounded-2xl p-6 
+           shadow-[0_20px_40px_rgba(0,0,0,0.4)]
+           transition-all duration-300;
+  }
+
+  .tech-input {
+    @apply bg-black/20 border border-white/10 rounded-xl px-4 py-3 focus:outline-none 
+           focus:ring-2 focus:ring-tech-blue/30 focus:border-tech-blue/50 transition-all;
+  }
+
+  .btn-primary {
+    @apply bg-tech-blue hover:bg-blue-700 text-white font-extrabold py-4 px-8 rounded-lg 
+           uppercase tracking-wider text-sm
+           transition-all duration-200 active:scale-95 disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply border border-text-secondary/30 hover:border-tech-blue hover:bg-tech-blue/5 text-text-primary 
+           font-extrabold py-4 px-8 rounded-lg uppercase tracking-wider text-sm
+           transition-all duration-300 active:scale-95;
+  }
+}

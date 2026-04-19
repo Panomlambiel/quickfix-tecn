@@ -1,0 +1,31 @@
+{
+  "entities": {
+    "RepairOrder": {
+      "title": "Repair Order",
+      "description": "Information about a customer tech repair request",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique 8-character tracking ID" },
+        "customerName": { "type": "string", "description": "Customer full name" },
+        "email": { "type": "string", "format": "email", "description": "Communication email" },
+        "deviceType": { "type": "string", "description": "Type of device (Laptop, Phone, etc)" },
+        "issueCategory": { "type": "string", "enum": ["Slow Performance", "Wi-Fi/Internet", "Other"], "description": "High-level categorization of the issue" },
+        "remoteConsent": { "type": "boolean", "description": "User consent for remote support" },
+        "issueDescription": { "type": "string", "description": "Detailed problem report" },
+        "status": { 
+          "type": "string", 
+          "enum": ["pending", "diagnosing", "repairing", "completed"],
+          "description": "Current workflow state"
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation" }
+      },
+      "required": ["id", "customerName", "email", "deviceType", "issueDescription", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "repair_orders/{orderId}": {
+      "schema": "RepairOrder",
+      "description": "Collection of all repair jobs tracked by the system"
+    }
+  }
+}
